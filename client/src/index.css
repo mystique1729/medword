@@ -1,0 +1,458 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   DESIGN SYSTEM: "Vital Signs" — Clinical Dark + Neon Accents
+   Deep navy base, ECG cyan/green neon, Space Mono for tiles
+   ============================================================ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Medical neon palette */
+  --color-med-cyan: oklch(0.82 0.18 200);
+  --color-med-green: oklch(0.85 0.22 145);
+  --color-med-indigo: oklch(0.45 0.22 265);
+  --color-med-crimson: oklch(0.62 0.22 25);
+  --color-med-navy: oklch(0.13 0.04 240);
+  --color-med-navy-light: oklch(0.18 0.04 240);
+  --color-med-navy-card: oklch(0.16 0.04 240);
+}
+
+:root {
+  --radius: 0.5rem;
+  /* Lighter clinical blue-grey palette */
+  --background: oklch(0.88 0.025 220);     /* light steel blue-grey */
+  --foreground: oklch(0.18 0.04 230);      /* deep navy text */
+  --card: oklch(0.93 0.018 215);           /* slightly lighter card */
+  --card-foreground: oklch(0.18 0.04 230);
+  --popover: oklch(0.93 0.018 215);
+  --popover-foreground: oklch(0.18 0.04 230);
+  --primary: oklch(0.45 0.18 220);         /* deep medical blue */
+  --primary-foreground: oklch(0.97 0.005 200);
+  --secondary: oklch(0.82 0.03 220);
+  --secondary-foreground: oklch(0.22 0.04 230);
+  --muted: oklch(0.82 0.03 220);
+  --muted-foreground: oklch(0.42 0.05 225);
+  --accent: oklch(0.55 0.20 145);          /* medical green accent */
+  --accent-foreground: oklch(0.97 0.005 200);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.97 0.005 200);
+  --border: oklch(0.72 0.04 220);
+  --input: oklch(0.85 0.025 220);
+  --ring: oklch(0.45 0.18 220);
+  --chart-1: oklch(0.45 0.18 220);
+  --chart-2: oklch(0.55 0.20 145);
+  --chart-3: oklch(0.65 0.18 70);
+  --chart-4: oklch(0.55 0.22 25);
+  --chart-5: oklch(0.55 0.15 280);
+  --sidebar: oklch(0.93 0.018 215);
+  --sidebar-foreground: oklch(0.18 0.04 230);
+  --sidebar-primary: oklch(0.45 0.18 220);
+  --sidebar-primary-foreground: oklch(0.97 0.005 200);
+  --sidebar-accent: oklch(0.82 0.03 220);
+  --sidebar-accent-foreground: oklch(0.18 0.04 230);
+  --sidebar-border: oklch(0.72 0.04 220);
+  --sidebar-ring: oklch(0.45 0.18 220);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+@layer components {
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+      max-width: 1280px;
+    }
+  }
+
+  /* ---- Medical Neon Glow Utilities ---- */
+  .glow-cyan {
+    box-shadow: 0 0 8px oklch(0.82 0.18 200 / 0.6), 0 0 20px oklch(0.82 0.18 200 / 0.3);
+  }
+  .glow-green {
+    box-shadow: 0 0 8px oklch(0.85 0.22 145 / 0.6), 0 0 20px oklch(0.85 0.22 145 / 0.3);
+  }
+  .glow-indigo {
+    box-shadow: 0 0 8px oklch(0.45 0.22 265 / 0.6), 0 0 20px oklch(0.45 0.22 265 / 0.3);
+  }
+  .glow-crimson {
+    box-shadow: 0 0 8px oklch(0.62 0.22 25 / 0.6), 0 0 20px oklch(0.62 0.22 25 / 0.3);
+  }
+
+  .text-glow-cyan {
+    text-shadow: 0 0 10px oklch(0.82 0.18 200 / 0.8), 0 0 30px oklch(0.82 0.18 200 / 0.4);
+  }
+  .text-glow-green {
+    text-shadow: 0 0 10px oklch(0.85 0.22 145 / 0.8), 0 0 30px oklch(0.85 0.22 145 / 0.4);
+  }
+  .text-glow-indigo {
+    text-shadow: 0 0 10px oklch(0.45 0.22 265 / 0.8), 0 0 30px oklch(0.45 0.22 265 / 0.4);
+  }
+
+  /* ---- Letter Tile ---- */
+  .letter-tile {
+    font-family: 'Space Mono', monospace;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Hidden tile: prominent border on light background */
+    border: 3px solid oklch(0.42 0.08 225);
+    background: oklch(0.78 0.04 220);
+    color: transparent;  /* no text shown when hidden */
+    border-radius: 8px;
+    box-shadow: inset 0 2px 4px oklch(0 0 0 / 0.12), 0 2px 6px oklch(0 0 0 / 0.10);
+    transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .letter-tile.revealed {
+    border-color: oklch(0.40 0.20 220);
+    background: oklch(0.30 0.18 225);
+    color: oklch(0.97 0.005 200);
+    box-shadow: 0 0 14px oklch(0.40 0.20 220 / 0.5), 0 0 30px oklch(0.40 0.20 220 / 0.2);
+  }
+  .letter-tile.vowel-revealed {
+    border-color: oklch(0.50 0.22 145);
+    background: oklch(0.32 0.18 150);
+    color: oklch(0.97 0.005 200);
+    box-shadow: 0 0 14px oklch(0.50 0.22 145 / 0.5), 0 0 30px oklch(0.50 0.22 145 / 0.2);
+  }
+  .letter-tile.space {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* ---- Team Card ---- */
+  .team-card {
+    border: 1px solid oklch(0.68 0.05 220);
+    background: oklch(0.93 0.018 215);
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 2px 8px oklch(0 0 0 / 0.08);
+  }
+  .team-card.active {
+    border-color: oklch(0.45 0.18 220);
+    box-shadow: 0 0 20px oklch(0.45 0.18 220 / 0.3), inset 0 0 20px oklch(0.45 0.18 220 / 0.05);
+  }
+
+  /* ---- ECG Line Animation ---- */
+  .ecg-line {
+    stroke: oklch(0.82 0.18 200);
+    stroke-width: 2;
+    fill: none;
+    filter: drop-shadow(0 0 4px oklch(0.82 0.18 200 / 0.8));
+  }
+
+  /* ---- Scanline overlay ---- */
+  .scanlines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      oklch(0 0 0 / 0.03) 2px,
+      oklch(0 0 0 / 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ---- Pulse animation for active team ---- */
+  @keyframes team-pulse {
+    0%, 100% { box-shadow: 0 0 20px oklch(0.82 0.18 200 / 0.4); }
+    50% { box-shadow: 0 0 40px oklch(0.82 0.18 200 / 0.8), 0 0 60px oklch(0.82 0.18 200 / 0.3); }
+  }
+  .team-pulse {
+    animation: team-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes tile-flip {
+    0% { transform: scaleY(0.95) scaleX(0.95); opacity: 0.5; }
+    50% { transform: scaleY(1.05) scaleX(1.05); }
+    100% { transform: scaleY(1) scaleX(1); opacity: 1; }
+  }
+  .tile-flip {
+    animation: tile-flip 0.35s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  @keyframes score-pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+  .score-pop {
+    animation: score-pop 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @keyframes wrong-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+  .wrong-shake {
+    animation: wrong-shake 0.4s ease-in-out;
+  }
+
+  @keyframes float-up {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-60px); opacity: 0; }
+  }
+  .float-up {
+    animation: float-up 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  @keyframes celebration-burst {
+    0% { transform: scale(0.8); opacity: 0; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .celebration-burst {
+    animation: celebration-burst 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  @keyframes ecg-draw {
+    from { stroke-dashoffset: 1000; }
+    to { stroke-dashoffset: 0; }
+  }
+  .ecg-draw {
+    stroke-dasharray: 1000;
+    animation: ecg-draw 2s linear infinite;
+  }
+
+  @keyframes blink-cursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  .blink {
+    animation: blink-cursor 1s step-end infinite;
+  }
+
+  @keyframes slide-in-up {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .slide-in-up {
+    animation: slide-in-up 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  @keyframes confetti-fall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  @keyframes winner-glow {
+    0%, 100% { box-shadow: 0 0 30px oklch(0.85 0.22 145 / 0.5), 0 0 60px oklch(0.85 0.22 145 / 0.2); }
+    50% { box-shadow: 0 0 60px oklch(0.85 0.22 145 / 0.9), 0 0 100px oklch(0.85 0.22 145 / 0.4); }
+  }
+  .winner-glow {
+    animation: winner-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes number-count {
+    from { transform: translateY(8px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .number-count {
+    animation: number-count 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* ---- Rank badge ---- */
+  .rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    border-radius: 6px;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .rank-badge-1 {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #1a0a00;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 165, 0, 0.3);
+  }
+  .rank-badge-2 {
+    background: linear-gradient(135deg, #C0C0C0, #A8A8A8);
+    color: #1a1a1a;
+    box-shadow: 0 0 8px rgba(192, 192, 192, 0.5);
+  }
+  .rank-badge-3 {
+    background: linear-gradient(135deg, #CD7F32, #B87333);
+    color: #1a0800;
+    box-shadow: 0 0 8px rgba(205, 127, 50, 0.5);
+  }
+  .rank-badge-other {
+    background: oklch(0.22 0.04 240);
+    color: oklch(0.60 0.04 220);
+    border: 1px solid oklch(0.30 0.05 230);
+  }
+
+  /* ---- Progress bar glow ---- */
+  @keyframes progress-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  /* ---- Score card flash when points earned ---- */
+  @keyframes score-card-flash {
+    0%   { transform: scale(1);    box-shadow: none; }
+    20%  { transform: scale(1.04); box-shadow: 0 0 0 3px var(--flash-color), 0 0 28px var(--flash-color-dim); }
+    50%  { transform: scale(1.02); box-shadow: 0 0 0 2px var(--flash-color), 0 0 18px var(--flash-color-dim); }
+    100% { transform: scale(1);    box-shadow: none; }
+  }
+  .score-card-flash {
+    animation: score-card-flash 0.65s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  /* ---- Podium animations ---- */
+  @keyframes podium-rise {
+    0%   { transform: scaleY(0) translateY(100%); opacity: 0; }
+    60%  { transform: scaleY(1.04) translateY(-4px); opacity: 1; }
+    100% { transform: scaleY(1) translateY(0); opacity: 1; }
+  }
+  .podium-rise {
+    transform-origin: bottom center;
+    animation: podium-rise 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  @keyframes podium-card-drop {
+    0%   { transform: translateY(-60px) scale(0.85); opacity: 0; }
+    60%  { transform: translateY(6px) scale(1.03); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .podium-card-drop {
+    animation: podium-card-drop 0.55s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  @keyframes podium-spotlight {
+    0%, 100% { opacity: 0.15; }
+    50%       { opacity: 0.35; }
+  }
+
+  @keyframes crown-bounce {
+    0%   { transform: translateY(-20px) scale(0.5) rotate(-15deg); opacity: 0; }
+    60%  { transform: translateY(4px) scale(1.15) rotate(5deg); opacity: 1; }
+    80%  { transform: translateY(-3px) scale(0.95) rotate(-2deg); }
+    100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
+  }
+  .crown-bounce {
+    animation: crown-bounce 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  @keyframes results-row-in {
+    from { transform: translateX(-30px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+  }
+  .results-row-in {
+    animation: results-row-in 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    opacity: 0;
+  }
+
+  @keyframes title-stamp {
+    0%   { transform: scale(2.5) rotate(-8deg); opacity: 0; filter: blur(8px); }
+    60%  { transform: scale(0.95) rotate(2deg); opacity: 1; filter: blur(0); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; filter: blur(0); }
+  }
+  .title-stamp {
+    animation: title-stamp 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  /* ---- Floating score number that rises and fades ---- */
+  @keyframes score-rise {
+    0%   { transform: translateY(0)   scale(1);    opacity: 1; }
+    30%  { transform: translateY(-12px) scale(1.15); opacity: 1; }
+    100% { transform: translateY(-48px) scale(0.9);  opacity: 0; }
+  }
+  .score-rise {
+    animation: score-rise 1.1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    pointer-events: none;
+    position: absolute;
+    top: 0; right: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: clamp(14px, 1.4vw, 20px);
+    text-shadow: 0 0 8px currentColor;
+    z-index: 20;
+  }
+}
