@@ -674,6 +674,7 @@ function LetterInputPanel() {
   const [lastKey, setLastKey] = useState<string | null>(null);
   const [bonusWordMode, setBonusWordMode] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
+  const [endGameConfirm, setEndGameConfirm] = useState(false);
 
   const currentTeam = state.settings.teams[state.round.currentTeamIndex];
   const colors = currentTeam ? TEAM_COLORS[currentTeam.color] : null;
@@ -908,6 +909,34 @@ function LetterInputPanel() {
         >
           ⟳ Reset Game
         </button>
+
+        {/* End game */}
+        {!endGameConfirm ? (
+          <button
+            onClick={() => { playClick(); setEndGameConfirm(true); }}
+            className="w-full text-xs py-1.5 rounded border border-red-600/50 text-red-600 hover:bg-red-50 hover:border-red-600 transition-colors flex items-center justify-center gap-1.5 font-semibold"
+          >
+            🏁 End Game Now
+          </button>
+        ) : (
+          <div className="flex flex-col gap-1.5 p-2 rounded border border-red-600/40 bg-red-50/60">
+            <p className="text-xs text-red-700 font-semibold text-center">End game with current scores?</p>
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => { dispatch({ type: 'FORCE_END_GAME' }); }}
+                className="flex-1 text-xs bg-red-600 hover:bg-red-700 text-white py-1.5 rounded font-semibold transition-colors"
+              >
+                Yes, End
+              </button>
+              <button
+                onClick={() => { playClick(); setEndGameConfirm(false); }}
+                className="flex-1 text-xs bg-muted hover:bg-muted/80 text-foreground py-1.5 rounded transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bonus Word Dialog */}
@@ -1311,7 +1340,6 @@ function FloatingScores() {
 function SettingsMenu({ onClose }: { onClose: () => void }) {
   const { dispatch } = useGame();
   const [vol, setVol] = useState(() => getVolume());
-
   function handleVolChange(e: React.ChangeEvent<HTMLInputElement>) {
     const v = parseFloat(e.target.value);
     setVol(v);
@@ -1327,7 +1355,7 @@ function SettingsMenu({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="absolute top-12 right-3 z-50 team-card p-4 flex flex-col gap-3 w-52 border border-border shadow-2xl">
+    <div className="absolute top-12 right-3 z-50 team-card p-4 flex flex-col gap-3 w-56 border border-border shadow-2xl" style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
       {/* Volume control */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
@@ -1372,6 +1400,7 @@ function SettingsMenu({ onClose }: { onClose: () => void }) {
       >
         ↺ Restart Game
       </button>
+
     </div>
   );
 }

@@ -68,6 +68,7 @@ type Action =
   | { type: 'NEXT_TEAM' }
   | { type: 'REMOVE_FLOATING_SCORE'; id: string }
   | { type: 'CLEAR_FLASH' }
+  | { type: 'FORCE_END_GAME' }  // GM ends game early with current scores
   | { type: 'RESET_GAME' };
 
 const TEAM_NAMES = ['Team Alpha', 'Team Beta', 'Team Gamma', 'Team Delta', 'Team Epsilon', 'Team Zeta'];
@@ -652,6 +653,10 @@ function reducer(state: GameState, action: Action): GameState {
 
     case 'CLEAR_FLASH':
       return { ...state, flashWrong: false, flashCorrect: false };
+
+    case 'FORCE_END_GAME':
+      playGameOver();
+      return { ...state, phase: 'game-over' };
 
     case 'RESET_GAME':
       return {
