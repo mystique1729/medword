@@ -871,7 +871,7 @@ function LetterInputPanel() {
           </button>
           <button
             onClick={() => { playClick(); dispatch({ type: 'REPLAY_WORD' }); }}
-            className="flex-1 text-xs py-1.5 rounded border border-cyan-500/30 text-cyan-400 hover:bg-cyan-950/20 transition-colors flex items-center justify-center gap-1"
+            className="flex-1 text-xs py-1.5 rounded border border-indigo-400/40 text-indigo-700 hover:bg-indigo-100/50 transition-colors flex items-center justify-center gap-1"
             title="Replay this word from scratch"
           >
             ↺ Replay
@@ -1001,9 +1001,9 @@ function GuessedLettersSummary() {
     <div className="flex items-center gap-4 flex-wrap justify-center">
       {correct.length > 0 && (
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-cyan-500/60 tracking-widest">✓</span>
+          <span className="text-xs text-indigo-600/70 tracking-widest">✓</span>
           {correct.map(l => (
-            <span key={l} className="font-mono text-xs px-1.5 py-0.5 rounded border border-cyan-500/30 text-cyan-400 bg-cyan-950/20">
+            <span key={l} className="font-mono text-xs px-1.5 py-0.5 rounded border border-indigo-400/40 text-indigo-700 bg-indigo-50">
               {l}
             </span>
           ))}
@@ -1355,7 +1355,7 @@ function SettingsMenu({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="absolute top-12 right-3 z-50 team-card p-4 flex flex-col gap-3 w-56 border border-border shadow-2xl" style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'auto' }}>
+    <div className="absolute top-12 right-3 z-50 p-4 flex flex-col gap-3 w-56 border border-border shadow-2xl rounded-xl" style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'auto', background: 'oklch(0.97 0.008 220)', backdropFilter: 'none' }}>
       {/* Volume control */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
@@ -1377,7 +1377,7 @@ function SettingsMenu({ onClose }: { onClose: () => void }) {
             step={0.05}
             value={vol}
             onChange={handleVolChange}
-            className="flex-1 accent-cyan-400 h-1.5"
+            className="flex-1 accent-indigo-600 h-1.5"
           />
           <Volume2 size={11} className="text-muted-foreground/50 shrink-0" />
         </div>

@@ -1,11 +1,13 @@
 // ============================================================
 // DESIGN: "Vital Signs" — Game Over / Final Scores screen
 // Animated podium reveal + full results table with words solved
+// Tie detection: teams with equal scores share the same rank
 // ============================================================
 
 import { useEffect, useState } from 'react';
 import { useGame } from '@/contexts/GameContext';
 import { TEAM_COLORS } from '@/lib/gameTypes';
+import type { Team } from '@/lib/gameTypes';
 import { playClick, playGameOver } from '@/lib/sounds';
 import { EcgHeader } from './EcgHeader';
 import { Confetti } from './Confetti';
@@ -16,6 +18,38 @@ import { RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 // Then results table rows stagger in (3.8s+)
 const PODIUM_DELAYS = [2000, 1000, 2800]; // index 0=1st, 1=2nd, 2=3rd → delay in ms
 
+// Compute dense rank: teams with equal scores share the same rank number.
+// Returns array of rank numbers (1-indexed) parallel to sortedTeams.
+function computeRanks(teams: Team[]): number[] {
+  const ranks: number[] = [];
+  let currentRank = 1;
+  for (let i = 0; i < teams.length; i++) {
+    if (i === 0) {
+      ranks.push(1);
+    } else if (teams[i].score === teams[i - 1].score) {
+      ranks.push(ranks[i - 1]);
+    } else {
+      currentRank = i + 1;
+      ranks.push(currentRank);
+    }
+  }
+  return ranks;
+}
+
+function rankLabel(rank: number, isTied: boolean): string {
+  if (rank === 1) return isTied ? '🥇' : '🥇';
+  if (rank === 2) return isTied ? '🥈' : '🥈';
+  if (rank === 3) return isTied ? '🥉' : '🥉';
+  return `#${rank}`;
+}
+
+function rankText(rank: number): string {
+  if (rank === 1) return '1st';
+  if (rank === 2) return '2nd';
+  if (rank === 3) return '3rd';
+  return `${rank}th`;
+}
+
 export function GameOverScreen() {
   const { state, dispatch } = useGame();
   const [showConfetti, setShowConfetti] = useState(false);
@@ -25,6 +59,7 @@ export function GameOverScreen() {
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
 
   const sortedTeams = [...state.settings.teams].sort((a, b) => b.score - a.score);
+  const ranks = computeRanks(sortedTeams);
   const gameName = state.settings.gameName || 'MEDWORD';
 
   // Build a map: teamId → list of disease phrases they solved
@@ -43,7 +78,7 @@ export function GameOverScreen() {
 
     // Stagger podium reveals: 2nd → 1st → 3rd
     const order = [1, 0, 2]; // reveal order indices into podiumVisible
-    order.forEach((podiumIdx, step) => {
+    order.forEach((podiumIdx) => {
       const delay = PODIUM_DELAYS[podiumIdx];
       setTimeout(() => {
         setPodiumVisible(prev => {
@@ -64,13 +99,27 @@ export function GameOverScreen() {
     setTimeout(() => setShowTable(true), 4200);
   }, []);
 
-  const top3 = [sortedTeams[0], sortedTeams[1], sortedTeams[2]];
-  // Podium order: 2nd (left), 1st (center), 3rd (right)
-  const podiumOrder = [top3[1], top3[0], top3[2]];
+  // ---- Podium: pick up to 3 unique rank slots ----
+  // If there's a tie for 1st, both go on the centre; if tie for 2nd, etc.
+  // We show at most 3 podium slots (rank 1, 2, 3). Ties within a slot are
+  // shown as a stacked list inside that slot.
+  const podiumSlots: { rank: number; teams: Team[] }[] = [];
+  for (const r of [1, 2, 3]) {
+    const teamsAtRank = sortedTeams.filter((_, i) => ranks[i] === r);
+    if (teamsAtRank.length > 0) podiumSlots.push({ rank: r, teams: teamsAtRank });
+    if (podiumSlots.length === 3) break;
+  }
+  // Pad to 3 slots so layout is stable
+  while (podiumSlots.length < 3) podiumSlots.push({ rank: 99, teams: [] });
+
+  // Display order: 2nd (left), 1st (centre), 3rd (right)
+  const displayOrder = [1, 0, 2]; // indices into podiumSlots
   const podiumHeights = ['h-28', 'h-40', 'h-20']; // 2nd, 1st, 3rd
-  const podiumLabels = ['2nd', '1st', '3rd'];
   const podiumEmojis = ['🥈', '🥇', '🥉'];
-  const podiumVisibleOrder = [podiumVisible[1], podiumVisible[0], podiumVisible[2]]; // reordered for display
+  const podiumVisibleOrder = [podiumVisible[1], podiumVisible[0], podiumVisible[2]];
+
+  const firstPlaceTeams = podiumSlots[0]?.teams ?? [];
+  const firstPlaceColors = firstPlaceTeams[0] ? TEAM_COLORS[firstPlaceTeams[0].color] : null;
 
   return (
     <div
@@ -99,7 +148,7 @@ export function GameOverScreen() {
               transform: 'translateX(-50%)',
               width: '300px',
               height: '100%',
-              background: `linear-gradient(180deg, ${top3[0] ? TEAM_COLORS[top3[0].color].hex : '#FFD700'}22 0%, transparent 60%)`,
+              background: `linear-gradient(180deg, ${firstPlaceColors ? firstPlaceColors.hex : '#FFD700'}22 0%, transparent 60%)`,
               animation: 'podium-spotlight 3s ease-in-out infinite',
             }}
           />
@@ -146,21 +195,25 @@ export function GameOverScreen() {
 
         {/* ---- PODIUM ---- */}
         <div className="flex items-end justify-center gap-3 mb-2 w-full max-w-2xl" style={{ minHeight: '260px' }}>
-          {podiumOrder.map((team, displayIdx) => {
+          {displayOrder.map((slotIdx, displayIdx) => {
+            const slot = podiumSlots[slotIdx];
             const isVisible = podiumVisibleOrder[displayIdx];
-            const isCenter = displayIdx === 1; // 1st place
-            const colors = team ? TEAM_COLORS[team.color] : null;
+            const isCenter = displayIdx === 1; // 1st place position
             const podiumDelay = [PODIUM_DELAYS[1], PODIUM_DELAYS[0], PODIUM_DELAYS[2]][displayIdx];
+            const hasTeams = slot && slot.teams.length > 0;
+            const isTied = hasTeams && slot.teams.length > 1;
+            // Use first team's color for the podium block; cards show individual colors
+            const primaryColors = hasTeams ? TEAM_COLORS[slot.teams[0].color] : null;
 
             return (
-              <div key={displayIdx} className="flex flex-col items-center" style={{ flex: isCenter ? '1.3' : '1', maxWidth: isCenter ? '220px' : '180px' }}>
-                {/* Team card above podium block */}
-                {team && isVisible && (
+              <div key={displayIdx} className="flex flex-col items-center" style={{ flex: isCenter ? '1.3' : '1', maxWidth: isCenter ? '240px' : '190px' }}>
+                {/* Team card(s) above podium block */}
+                {hasTeams && isVisible && (
                   <div
                     className="podium-card-drop w-full mb-2"
                     style={{ animationDelay: `${podiumDelay}ms` }}
                   >
-                    {/* Crown / emoji for 1st */}
+                    {/* Crown for 1st */}
                     {isCenter && (
                       <div
                         className="crown-bounce text-center mb-1"
@@ -169,47 +222,68 @@ export function GameOverScreen() {
                         👑
                       </div>
                     )}
-                    <div
-                      className="flex flex-col items-center gap-1.5 p-3 rounded-xl border-2"
-                      style={{
-                        borderColor: colors!.hex,
-                        background: `${colors!.hex}15`,
-                        boxShadow: isCenter
-                          ? `0 0 30px ${colors!.hex}60, 0 0 60px ${colors!.hex}20`
-                          : `0 0 15px ${colors!.hex}30`,
-                      }}
-                    >
-                      <div
-                        className="font-black tracking-widest text-center"
-                        style={{
-                          fontFamily: 'Orbitron, sans-serif',
-                          color: colors!.hex,
-                          fontSize: isCenter ? 'clamp(14px, 1.8vw, 22px)' : 'clamp(11px, 1.4vw, 17px)',
-                          textShadow: `0 0 10px ${colors!.hex}80`,
-                        }}
-                      >
-                        {team.name}
+
+                    {/* Tied badge */}
+                    {isTied && (
+                      <div className="text-center mb-1">
+                        <span
+                          className="text-xs font-bold tracking-widest uppercase px-2 py-0.5 rounded-full"
+                          style={{ background: 'oklch(0.55 0.20 30 / 0.15)', color: 'oklch(0.45 0.20 30)', border: '1px solid oklch(0.55 0.20 30 / 0.4)' }}
+                        >
+                          TIED — {rankText(slot.rank)}
+                        </span>
                       </div>
-                      {team.players.filter(p => p.name.trim()).length > 0 && (
-                        <p className="text-xs text-muted-foreground/70 text-center leading-tight">
-                          {team.players.filter(p => p.name.trim()).map(p => p.name).join(' · ')}
-                        </p>
-                      )}
-                      <div
-                        className="font-black font-mono"
-                        style={{
-                          fontFamily: 'Orbitron, sans-serif',
-                          color: colors!.hex,
-                          fontSize: isCenter ? 'clamp(20px, 2.5vw, 32px)' : 'clamp(16px, 2vw, 24px)',
-                        }}
-                      >
-                        {team.score}
-                        <span className="text-xs text-muted-foreground ml-1">pts</span>
-                      </div>
-                      {/* Words solved count */}
-                      <div className="text-xs text-muted-foreground/60">
-                        {teamSolvedWords[team.id]?.length ?? 0} word{(teamSolvedWords[team.id]?.length ?? 0) !== 1 ? 's' : ''} solved
-                      </div>
+                    )}
+
+                    {/* One card per tied team */}
+                    <div className={`flex flex-col gap-1.5 ${isTied ? 'w-full' : 'w-full'}`}>
+                      {slot.teams.map((team) => {
+                        const tc = TEAM_COLORS[team.color];
+                        return (
+                          <div
+                            key={team.id}
+                            className="flex flex-col items-center gap-1 p-2.5 rounded-xl border-2"
+                            style={{
+                              borderColor: tc.hex,
+                              background: `${tc.hex}15`,
+                              boxShadow: isCenter
+                                ? `0 0 20px ${tc.hex}50, 0 0 40px ${tc.hex}15`
+                                : `0 0 10px ${tc.hex}25`,
+                            }}
+                          >
+                            <div
+                              className="font-black tracking-widest text-center"
+                              style={{
+                                fontFamily: 'Orbitron, sans-serif',
+                                color: tc.hex,
+                                fontSize: isCenter ? 'clamp(12px, 1.6vw, 20px)' : 'clamp(10px, 1.2vw, 15px)',
+                                textShadow: `0 0 8px ${tc.hex}80`,
+                              }}
+                            >
+                              {team.name}
+                            </div>
+                            {team.players.filter(p => p.name.trim()).length > 0 && (
+                              <p className="text-xs text-muted-foreground/70 text-center leading-tight">
+                                {team.players.filter(p => p.name.trim()).map(p => p.name).join(' · ')}
+                              </p>
+                            )}
+                            <div
+                              className="font-black font-mono"
+                              style={{
+                                fontFamily: 'Orbitron, sans-serif',
+                                color: tc.hex,
+                                fontSize: isCenter ? 'clamp(18px, 2.2vw, 28px)' : 'clamp(14px, 1.8vw, 22px)',
+                              }}
+                            >
+                              {team.score}
+                              <span className="text-xs text-muted-foreground ml-1">pts</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground/60">
+                              {teamSolvedWords[team.id]?.length ?? 0} word{(teamSolvedWords[team.id]?.length ?? 0) !== 1 ? 's' : ''} solved
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -218,10 +292,12 @@ export function GameOverScreen() {
                 <div
                   className={`w-full rounded-t-lg flex flex-col items-center justify-end pb-2 ${podiumHeights[displayIdx]}`}
                   style={{
-                    background: team && isVisible
-                      ? `linear-gradient(180deg, ${colors!.hex}40 0%, ${colors!.hex}20 100%)`
+                    background: hasTeams && isVisible
+                      ? `linear-gradient(180deg, ${primaryColors!.hex}40 0%, ${primaryColors!.hex}20 100%)`
                       : 'oklch(0.80 0.04 220)',
-                    border: `2px solid ${team && isVisible ? colors!.hex + '80' : 'oklch(0.65 0.05 220)'}`,
+                    borderTop: `2px solid ${hasTeams && isVisible ? primaryColors!.hex + '80' : 'oklch(0.65 0.05 220)'}`,
+                    borderLeft: `2px solid ${hasTeams && isVisible ? primaryColors!.hex + '80' : 'oklch(0.65 0.05 220)'}`,
+                    borderRight: `2px solid ${hasTeams && isVisible ? primaryColors!.hex + '80' : 'oklch(0.65 0.05 220)'}`,
                     borderBottom: 'none',
                     transition: 'all 0.3s ease',
                     opacity: isVisible ? 1 : 0.15,
@@ -236,11 +312,11 @@ export function GameOverScreen() {
                     className="font-black tracking-widest"
                     style={{
                       fontFamily: 'Orbitron, sans-serif',
-                      color: isVisible && colors ? colors.hex : 'oklch(0.40 0.04 220)',
+                      color: isVisible && primaryColors ? primaryColors.hex : 'oklch(0.40 0.04 220)',
                       fontSize: 'clamp(10px, 1.2vw, 14px)',
                     }}
                   >
-                    {podiumLabels[displayIdx]}
+                    {hasTeams && isTied ? `TIE` : podiumLabels[displayIdx]}
                   </span>
                 </div>
               </div>
@@ -270,8 +346,11 @@ export function GameOverScreen() {
                 const colors = TEAM_COLORS[team.color];
                 const isExpanded = expandedTeam === team.id;
                 const solved = teamSolvedWords[team.id] ?? [];
-                const rank = i + 1;
-                const rankLabel = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+                const rank = ranks[i];
+                // Check if any other team shares this rank
+                const isTied = ranks.filter(r => r === rank).length > 1;
+                const emoji = rankLabel(rank, isTied);
+                const tiedLabel = isTied ? ' (Tied)' : '';
 
                 return (
                   <div
@@ -289,7 +368,17 @@ export function GameOverScreen() {
                       className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-black/5 transition-colors"
                       onClick={() => setExpandedTeam(isExpanded ? null : team.id)}
                     >
-                      <span className="text-xl w-8 text-center shrink-0">{rankLabel}</span>
+                      <div className="flex flex-col items-center w-10 shrink-0">
+                        <span className="text-xl">{emoji}</span>
+                        {isTied && (
+                          <span
+                            className="text-xs font-bold leading-none mt-0.5"
+                            style={{ color: 'oklch(0.45 0.20 30)', fontSize: '9px' }}
+                          >
+                            TIE
+                          </span>
+                        )}
+                      </div>
 
                       <div className="flex-1 min-w-0">
                         <span
@@ -297,6 +386,14 @@ export function GameOverScreen() {
                           style={{ fontFamily: 'Orbitron, sans-serif', color: colors.hex, fontSize: 'clamp(11px, 1.3vw, 15px)' }}
                         >
                           {team.name}
+                          {isTied && (
+                            <span
+                              className="ml-2 text-xs font-normal normal-case tracking-normal"
+                              style={{ color: 'oklch(0.45 0.20 30)' }}
+                            >
+                              {tiedLabel}
+                            </span>
+                          )}
                         </span>
                         {team.players.filter(p => p.name.trim()).length > 0 && (
                           <p className="text-xs text-muted-foreground/60 truncate">
@@ -384,3 +481,6 @@ export function GameOverScreen() {
     </div>
   );
 }
+
+// Needed for podium label reference inside displayOrder loop
+const podiumLabels = ['2nd', '1st', '3rd'];
