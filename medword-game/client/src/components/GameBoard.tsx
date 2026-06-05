@@ -1355,7 +1355,8 @@ function SettingsMenu({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="absolute top-12 right-3 z-50 p-4 flex flex-col gap-3 w-56 border border-border shadow-2xl rounded-xl" style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'auto', background: 'oklch(0.97 0.008 220)', backdropFilter: 'none' }}>
+    <div className="fixed inset-0 z-[200] flex items-start justify-end" onClick={onClose}>
+    <div className="mt-14 mr-3 p-4 flex flex-col gap-3 w-64 border border-border shadow-2xl rounded-xl" style={{ maxHeight: 'calc(100vh - 80px)', overflowY: 'auto', background: 'oklch(0.97 0.008 220)' }} onClick={e => e.stopPropagation()}>
       {/* Volume control */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
@@ -1401,6 +1402,7 @@ function SettingsMenu({ onClose }: { onClose: () => void }) {
         ↺ Restart Game
       </button>
 
+    </div>
     </div>
   );
 }
@@ -1474,7 +1476,6 @@ export function GameBoard() {
           >
             <Settings size={13} />
           </button>
-          {showSettings && <SettingsMenu onClose={() => setShowSettings(false)} />}
         </div>
       </div>
 
@@ -1511,6 +1512,9 @@ export function GameBoard() {
       <FloatingScores />
       {state.phase === 'word-solved' && <WordSolvedOverlay />}
       {state.phase === 'bonus-round' && <BonusRoundOverlay />}
+
+      {/* Settings overlay — rendered at root so it covers everything */}
+      {showSettings && <SettingsMenu onClose={() => setShowSettings(false)} />}
     </div>
   );
 }
