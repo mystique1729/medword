@@ -182,17 +182,37 @@ function WordDisplay() {
   const words = phrase.split(' ');
   const isRevealed = round.wordRevealed;
   const isSolved = round.solvedWordIndices.includes(round.wordIndex);
+  const isDemo = !!disease.isDemo;
 
   return (
     <div className="flex flex-col items-center gap-6 w-full">
+      {/* DEMO banner */}
+      {isDemo && (
+        <div
+          className="w-full flex flex-col items-center gap-1 py-2 px-4 rounded-xl border-2"
+          style={{ borderColor: 'oklch(0.65 0.18 55)', background: 'oklch(0.97 0.04 55 / 0.5)' }}
+        >
+          <span
+            className="font-black tracking-widest text-sm"
+            style={{ fontFamily: 'Orbitron, sans-serif', color: 'oklch(0.45 0.18 55)' }}
+          >
+            🎓 DEMO ROUND
+          </span>
+          <span className="text-xs text-muted-foreground">
+            Explanation only — no points awarded
+          </span>
+        </div>
+      )}
+
       {/* Word number */}
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-gradient-to-r from-transparent to-border/50" style={{ maxWidth: '80px' }} />
         <span className="text-xs text-muted-foreground tracking-widest uppercase font-mono">
-          {(() => {
-            const validDiseases = settings.diseases.filter(d => d.phrase.trim());
-            const currentNum = validDiseases.findIndex((_, i) => settings.diseases.indexOf(validDiseases[i]) >= round.wordIndex) + 1;
-            return `Round ${currentNum || 1} / ${validDiseases.length}`;
+          {isDemo ? 'DEMO ROUND' : (() => {
+            // Exclude demo word from round count
+            const realDiseases = settings.diseases.filter(d => d.phrase.trim() && !d.isDemo);
+            const currentNum = realDiseases.findIndex((d) => settings.diseases.indexOf(d) >= round.wordIndex) + 1;
+            return `Round ${currentNum || 1} / ${realDiseases.length}`;
           })()}
         </span>
         <div className="h-px flex-1 bg-gradient-to-l from-transparent to-border/50" style={{ maxWidth: '80px' }} />
@@ -281,6 +301,12 @@ function WordProgressBar() {
   const total = validDiseases.length;
   if (total === 0) return null;
 
+  // Exclude demo word from display counts
+  const realDiseases = validDiseases.filter(d => !d.isDemo);
+  const realTotal = realDiseases.length;
+
+  const isCurrentDemo = !!diseases[state.round.wordIndex]?.isDemo;
+
   // How many valid words have been completed (wordIndex points to current)
   // Count valid diseases before the current wordIndex
   const completedCount = validDiseases.filter((d) => {
@@ -300,10 +326,14 @@ function WordProgressBar() {
       {/* Label row */}
       <div className="flex items-center justify-between px-1">
         <span className="text-xs text-muted-foreground/60 tracking-widest uppercase">
-          Word {displayNum} of {total}
+          {isCurrentDemo ? (
+            <span style={{ color: 'oklch(0.55 0.15 55)' }}>DEMO</span>
+          ) : (
+            `Word ${displayNum - 1} of ${realTotal}`
+          )}
         </span>
         <span className="text-xs font-mono text-primary/70">
-          {completedCount}/{total - 1} done
+          {isCurrentDemo ? '0' : Math.max(0, completedCount - 1)}/{realTotal} done
         </span>
       </div>
       {/* Track */}
@@ -359,6 +389,7 @@ function TeamScoreCards() {
   const { state, dispatch } = useGame();
   const { teams } = state.settings;
   const { currentTeamIndex } = state.round;
+  const isDemo = !!state.settings.diseases[state.round.wordIndex]?.isDemo;
   const [customPointsTeam, setCustomPointsTeam] = useState<{ id: string; name: string; hex: string } | null>(null);
 
   // Compute live ranks (1-indexed, ties share the same rank)
@@ -495,31 +526,40 @@ function TeamScoreCards() {
                 </div>
               )}
 
-              {/* Quick score adjust */}
-              <div className="flex gap-1">
-                <button
-                  onClick={() => { playClick(); dispatch({ type: 'AWARD_POINTS', teamId: team.id, points: state.settings.scoreConfig.pointsPerLetter }); }}
-                  className="flex-1 text-xs py-0.5 rounded border border-green-500/30 text-green-400 hover:bg-green-950/30 transition-colors font-mono"
+              {/* Quick score adjust — hidden during demo round */}
+              {!isDemo ? (
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => { playClick(); dispatch({ type: 'AWARD_POINTS', teamId: team.id, points: state.settings.scoreConfig.pointsPerLetter }); }}
+                    className="flex-1 text-xs py-0.5 rounded border border-green-500/30 text-green-400 hover:bg-green-950/30 transition-colors font-mono"
+                  >
+                    +{state.settings.scoreConfig.pointsPerLetter}
+                  </button>
+                  <button
+                    onClick={() => { playClick(); dispatch({ type: 'AWARD_POINTS', teamId: team.id, points: -state.settings.scoreConfig.pointsPerLetter }); }}
+                    className="flex-1 text-xs py-0.5 rounded border border-red-500/30 text-red-400 hover:bg-red-950/30 transition-colors font-mono"
+                  >
+                    -{state.settings.scoreConfig.pointsPerLetter}
+                  </button>
+                  <button
+                    onClick={() => {
+                      playClick();
+                      setCustomPointsTeam({ id: team.id, name: team.name, hex: colors.hex });
+                    }}
+                    className="px-2 text-xs py-0.5 rounded border border-border text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                    title="Custom points"
+                  >
+                    <Pencil size={11} />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className="text-center text-xs py-0.5 rounded border"
+                  style={{ borderColor: 'oklch(0.65 0.18 55 / 0.4)', color: 'oklch(0.55 0.15 55)', background: 'oklch(0.97 0.04 55 / 0.3)' }}
                 >
-                  +{state.settings.scoreConfig.pointsPerLetter}
-                </button>
-                <button
-                  onClick={() => { playClick(); dispatch({ type: 'AWARD_POINTS', teamId: team.id, points: -state.settings.scoreConfig.pointsPerLetter }); }}
-                  className="flex-1 text-xs py-0.5 rounded border border-red-500/30 text-red-400 hover:bg-red-950/30 transition-colors font-mono"
-                >
-                  -{state.settings.scoreConfig.pointsPerLetter}
-                </button>
-                <button
-                  onClick={() => {
-                    playClick();
-                    setCustomPointsTeam({ id: team.id, name: team.name, hex: colors.hex });
-                  }}
-                  className="px-2 text-xs py-0.5 rounded border border-border text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
-                  title="Custom points"
-                >
-                  <Pencil size={11} />
-                </button>
-              </div>
+                  demo — no pts
+                </div>
+              )}
             </div>
           );
         })}
@@ -1021,6 +1061,7 @@ function WordSolvedOverlay() {
   const solverTeam = state.settings.teams[solverIndex];
   const colors = solverTeam ? TEAM_COLORS[solverTeam.color] : null;
   const disease = state.settings.diseases[state.round.wordIndex];
+  const isDemo = !!disease?.isDemo;
   const remainingAfter = state.settings.diseases.slice(state.round.wordIndex + 1).some(d => d.phrase.trim());
   const isLastWord = !remainingAfter;
   const validDiseases = state.settings.diseases.filter(d => d.phrase.trim());
@@ -1051,17 +1092,32 @@ function WordSolvedOverlay() {
           {disease?.hint && <p className="text-muted-foreground text-sm mt-1 italic">{disease.hint}</p>}
         </div>
 
-        <div className="flex items-baseline gap-2">
-          <span
-            className="text-5xl font-black"
-            style={{ fontFamily: 'Orbitron, sans-serif', color: disease?.bonusPoints ? '#4338CA' : 'oklch(0.50 0.20 145)' }}
+        {isDemo ? (
+          <div
+            className="flex items-center gap-2 px-4 py-2 rounded-full border"
+            style={{ borderColor: 'oklch(0.65 0.18 55 / 0.5)', background: 'oklch(0.97 0.04 55 / 0.4)' }}
           >
-            +{disease?.bonusPoints ?? state.settings.scoreConfig.pointsForWord}
-          </span>
-          <span className="text-muted-foreground">
-            {disease?.bonusPoints ? 'bonus points!' : 'points'}
-          </span>
-        </div>
+            <span className="text-2xl">🎓</span>
+            <span
+              className="font-bold tracking-widest text-sm"
+              style={{ fontFamily: 'Orbitron, sans-serif', color: 'oklch(0.45 0.18 55)' }}
+            >
+              DEMO — No points awarded
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-baseline gap-2">
+            <span
+              className="text-5xl font-black"
+              style={{ fontFamily: 'Orbitron, sans-serif', color: disease?.bonusPoints ? '#4338CA' : 'oklch(0.50 0.20 145)' }}
+            >
+              +{disease?.bonusPoints ?? state.settings.scoreConfig.pointsForWord}
+            </span>
+            <span className="text-muted-foreground">
+              {disease?.bonusPoints ? 'bonus points!' : 'points'}
+            </span>
+          </div>
+        )}
 
         <Button
           onClick={() => { playClick(); dispatch({ type: 'NEXT_WORD' }); }}
@@ -1091,6 +1147,7 @@ function BonusRoundOverlay() {
   const { state, dispatch } = useGame();
   const { teams, scoreConfig } = state.settings;
   const disease = state.settings.diseases[state.round.wordIndex];
+  const isDemo = !!disease?.isDemo;
   const movies = disease?.movies || [];
   const remainingAfter = state.settings.diseases.slice(state.round.wordIndex + 1).some(d => d.phrase.trim());
   const isLastWord = !remainingAfter;
@@ -1138,9 +1195,15 @@ function BonusRoundOverlay() {
           >
             BONUS ROUND!
           </p>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            Guess the Bollywood connection &mdash; <strong>+{bonusPoints} pts</strong> for movie &amp; actor together
-          </p>
+          {isDemo ? (
+            <p className="text-sm mt-0.5 font-bold" style={{ color: 'oklch(0.45 0.18 55)' }}>
+              🎓 DEMO — Reveal the answers to explain the game. No points awarded.
+            </p>
+          ) : (
+            <p className="text-muted-foreground text-sm mt-0.5">
+              Guess the Bollywood connection &mdash; <strong>+{bonusPoints} pts</strong> for movie &amp; actor together
+            </p>
+          )}
         </div>
 
         {/* Solved disease */}
@@ -1237,21 +1300,23 @@ function BonusRoundOverlay() {
                       👁️ Reveal Answer
                     </button>
                   )}
-                  <button
-                    onClick={() => handleAward(mi)}
-                    disabled={isAwarded}
-                    className="px-4 py-2 rounded-lg border-2 text-sm font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-                    style={{
-                      borderColor: isAwarded ? 'oklch(0.50 0.20 145)' : selectedColors?.hex || 'oklch(0.45 0.18 220)',
-                      color: isAwarded ? 'oklch(0.50 0.20 145)' : selectedColors?.hex || 'oklch(0.45 0.18 220)',
-                      background: isAwarded ? 'oklch(0.50 0.20 145 / 0.1)' : `${selectedColors?.hex || 'oklch(0.45 0.18 220)'}18`,
-                    }}
-                  >
-                    {isAwarded
-                      ? `✓ Awarded +${bonusPoints} to ${selectedTeam?.name}`
-                      : `🏆 Award +${bonusPoints} to ${selectedTeam?.name}`
-                    }
-                  </button>
+                  {!isDemo && (
+                    <button
+                      onClick={() => handleAward(mi)}
+                      disabled={isAwarded}
+                      className="px-4 py-2 rounded-lg border-2 text-sm font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{
+                        borderColor: isAwarded ? 'oklch(0.50 0.20 145)' : selectedColors?.hex || 'oklch(0.45 0.18 220)',
+                        color: isAwarded ? 'oklch(0.50 0.20 145)' : selectedColors?.hex || 'oklch(0.45 0.18 220)',
+                        background: isAwarded ? 'oklch(0.50 0.20 145 / 0.1)' : `${selectedColors?.hex || 'oklch(0.45 0.18 220)'}18`,
+                      }}
+                    >
+                      {isAwarded
+                        ? `✓ Awarded +${bonusPoints} to ${selectedTeam?.name}`
+                        : `🏆 Award +${bonusPoints} to ${selectedTeam?.name}`
+                      }
+                    </button>
+                  )}
                 </div>
               </div>
             );

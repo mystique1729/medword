@@ -8,6 +8,7 @@ import { nanoid } from 'nanoid';
 import {
   DEFAULT_DISEASES,
   DEFAULT_SCORE_CONFIG,
+  DEMO_WORD,
   DiseaseWord,
   FloatingScore,
   GamePhase,
@@ -259,13 +260,15 @@ function reducer(state: GameState, action: Action): GameState {
     }
 
     case 'START_GAME': {
-      // Start at the first valid (non-empty) disease
-      const firstValidIndex = state.settings.diseases.findIndex(d => d.phrase.trim());
+      // Prepend the demo word (remove any existing demo first to avoid duplicates)
+      const diseasesWithoutDemo = state.settings.diseases.filter(d => d.id !== '__demo__');
+      const diseasesWithDemo = [DEMO_WORD, ...diseasesWithoutDemo];
       return {
         ...state,
         phase: 'playing',
+        settings: { ...state.settings, diseases: diseasesWithDemo },
         round: {
-          wordIndex: firstValidIndex >= 0 ? firstValidIndex : 0,
+          wordIndex: 0, // always start at demo word
           currentTeamIndex: 0,
           guessedLetters: [],
           wordRevealed: false,
@@ -313,19 +316,22 @@ function reducer(state: GameState, action: Action): GameState {
       };
 
       if (isCorrect) {
-        // Award points for the letter
+        // Award points for the letter — skip if demo round
         const currentTeam = state.settings.teams[state.round.currentTeamIndex];
-        newState = {
-          ...newState,
-          settings: {
-            ...newState.settings,
-            teams: newState.settings.teams.map(t =>
-              t.id === currentTeam.id
-                ? { ...t, score: t.score + state.settings.scoreConfig.pointsPerLetter }
-                : t
-            ),
-          },
-        };
+        const isDemo = state.settings.diseases[state.round.wordIndex]?.isDemo;
+        if (!isDemo) {
+          newState = {
+            ...newState,
+            settings: {
+              ...newState.settings,
+              teams: newState.settings.teams.map(t =>
+                t.id === currentTeam.id
+                  ? { ...t, score: t.score + state.settings.scoreConfig.pointsPerLetter }
+                  : t
+              ),
+            },
+          };
+        }
         playCorrectLetter();
       } else {
         playWrongGuess();
@@ -343,6 +349,7 @@ function reducer(state: GameState, action: Action): GameState {
       if (action.correct) {
         const currentTeam = state.settings.teams[state.round.currentTeamIndex];
         const currentDisease = state.settings.diseases[state.round.wordIndex];
+        const isDemoWord = !!currentDisease?.isDemo;
         // Sliding bonus: full bonus when 0 consonants guessed, 0 bonus when only 1 consonant remains
         // For bonus words, use their fixed bonusPoints directly (no sliding)
         let wordPoints: number;
@@ -360,11 +367,14 @@ function reducer(state: GameState, action: Action): GameState {
           const fraction = totalConsonants <= 1 ? 0 : Math.max(0, (remainingConsonants - 1) / (totalConsonants - 1));
           wordPoints = Math.round(baseBonus * fraction);
         }
-        const newTeams = state.settings.teams.map(t =>
-          t.id === currentTeam.id
-            ? { ...t, score: t.score + wordPoints }
-            : t
-        );
+        // No points for demo round
+        const newTeams = isDemoWord
+          ? state.settings.teams
+          : state.settings.teams.map(t =>
+              t.id === currentTeam.id
+                ? { ...t, score: t.score + wordPoints }
+                : t
+            );
         // Next word starts from the team AFTER the one that solved it (round-robin)
         const nextTeamIndex = (state.round.currentTeamIndex + 1) % state.settings.teams.length;
         // Record this word index as solved
@@ -408,6 +418,9 @@ function reducer(state: GameState, action: Action): GameState {
     }
 
     case 'AWARD_POINTS': {
+      // Block all manual point awards during demo round
+      const isDemoRound = !!state.settings.diseases[state.round.wordIndex]?.isDemo;
+      if (isDemoRound) return state;
       const floatingId = nanoid();
       const newTeams = state.settings.teams.map(t =>
         t.id === action.teamId ? { ...t, score: Math.max(0, t.score + action.points) } : t

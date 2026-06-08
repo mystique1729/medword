@@ -579,10 +579,27 @@ function ReadyStep() {
         })}
       </div>
 
+      {/* Demo round notice */}
+      <div
+        className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 w-full max-w-2xl"
+        style={{ borderColor: 'oklch(0.65 0.18 55 / 0.6)', background: 'oklch(0.97 0.04 55 / 0.4)' }}
+      >
+        <span className="text-2xl">🎓</span>
+        <div>
+          <p className="font-bold text-sm tracking-wide" style={{ color: 'oklch(0.40 0.18 55)', fontFamily: 'Orbitron, sans-serif' }}>
+            DEMO ROUND INCLUDED
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Game starts with a demo round (<strong>ALCOHOLISM</strong> — Devdas / Sharabi) to explain the rules.
+            No points are awarded during the demo.
+          </p>
+        </div>
+      </div>
+
       {/* Stats */}
       <div className="flex items-center gap-6 text-sm text-muted-foreground">
         <span>
-          <span className="text-primary font-mono font-bold">{state.settings.diseases.filter(d => d.phrase.trim()).length}</span> diseases
+          <span className="text-primary font-mono font-bold">{state.settings.diseases.filter(d => d.phrase.trim() && d.id !== '__demo__').length}</span> diseases
         </span>
         <span className="text-border">·</span>
         <span>

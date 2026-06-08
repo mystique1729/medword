@@ -40,6 +40,7 @@ export interface DiseaseWord {
   hint?: string;
   movies?: MovieHint[]; // associated Bollywood movies/actors
   bonusPoints?: number; // if set, overrides scoreConfig.pointsForWord for this word
+  isDemo?: boolean; // if true, this word is the demo round — no points awarded
 }
 
 export interface ScoreConfig {
@@ -84,6 +85,18 @@ export interface FloatingScore {
 }
 
 export const VOWELS = new Set(['A', 'E', 'I', 'O', 'U']);
+
+// Fixed demo word — always prepended at game start, awards 0 points
+export const DEMO_WORD: DiseaseWord = {
+  id: '__demo__',
+  phrase: 'ALCOHOLISM',
+  hint: 'Chronic dependence on alcohol',
+  isDemo: true,
+  movies: [
+    { movie: 'DEVDAS', actor: 'SHAHRUKH KHAN' },
+    { movie: 'SHARABI', actor: 'AMITABH BACHCHAN' },
+  ],
+};
 
 export const DEFAULT_DISEASES: DiseaseWord[] = [
   {
