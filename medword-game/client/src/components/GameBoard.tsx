@@ -892,6 +892,22 @@ function LetterInputPanel() {
       <div className="flex flex-col gap-1.5">
         <p className="text-xs text-muted-foreground tracking-widest uppercase text-center">GM Actions</p>
 
+        {/* Skip Demo — only shown during demo round */}
+        {state.settings.diseases[state.round.wordIndex]?.isDemo && (
+          <button
+            onClick={() => { playClick(); dispatch({ type: 'NEXT_WORD' }); }}
+            className="w-full text-xs py-2 rounded-lg border-2 font-bold transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5"
+            style={{
+              borderColor: 'oklch(0.55 0.18 55)',
+              color: 'oklch(0.40 0.18 55)',
+              background: 'oklch(0.97 0.04 55 / 0.5)',
+            }}
+            title="Skip the demo round and start the real game"
+          >
+            <SkipForward size={13} /> Skip Demo → Start Game
+          </button>
+        )}
+
         {/* Skip turn */}
         <button
           onClick={() => { playClick(); dispatch({ type: 'NEXT_TEAM' }); }}
