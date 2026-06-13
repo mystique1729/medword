@@ -590,7 +590,7 @@ function ReadyStep() {
             DEMO ROUND INCLUDED
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Game starts with a demo round (<strong>ALCOHOLISM</strong> — Devdas / Sharabi) to explain the rules.
+            Game starts with an unscored demo round to explain the rules.
             No points are awarded during the demo.
           </p>
         </div>
