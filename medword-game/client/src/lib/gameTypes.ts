@@ -167,7 +167,7 @@ export const DEFAULT_DISEASES: DiseaseWord[] = [
 export const DEFAULT_SCORE_CONFIG: ScoreConfig = {
   pointsPerLetter: 10,
   pointsForWord: 50,
-  pointsPerMovie: 25,
-  pointsPerActor: 25,
+  pointsPerMovie: 10,
+  pointsPerActor: 10,
   timerSeconds: 0, // default: no timer
 };

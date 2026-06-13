@@ -550,9 +550,9 @@ function ReadyStep() {
           className="font-black tracking-widest text-glow-green"
           style={{ fontFamily: 'Orbitron, sans-serif', color: 'oklch(0.45 0.20 145)', fontSize: 'clamp(24px, 3.5vw, 48px)' }}
         >
-          READY FOR SURGERY?
+          READY FOR DIAGNOSIS?
         </h2>
-        <p className="text-muted-foreground mt-2 tracking-widest text-sm">All systems nominal. Prepare to operate.</p>
+        <p className="text-muted-foreground mt-2 tracking-widest text-sm">All systems nominal. Prepare to diagnose.</p>
       </div>
 
       {/* Teams preview */}
